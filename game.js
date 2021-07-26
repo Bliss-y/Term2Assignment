@@ -7,71 +7,94 @@ var start;
 var bombsTimer;
 var lifeCount = 3;
 var player;
+var bombs = [];
+var speedMult = 1.0;
+var gameTicks = 0;
+var gamePaused = false;
+var score = 0;
 
-function objectCollision(obj1) {
+function objectCollision(obj1, obj2) {
 	var top1 = obj1.offsetTop;
-	// var top2 = obj2.offsetTop;
+	var top2 = obj2.offsetTop;
 	var left1 =obj1.offsetLeft;
-	// var left2 = obj2.offsetLeft;
+	var left2 = obj2.offsetLeft;
 	var height1 = obj1.offsetHeight;
-	// var height2 = obj2.offsetHeight;
+	var height2 = obj2.offsetHeight;
 	var width1 = obj1.offsetWidth;
-	// var width2 = obj2.offsetWidth;
+	var width2 = obj2.offsetWidth;
 	var newleft = left1;
 	var newtop = top1;
 	console.log(newleft);
 	console.log(newtop);
-	for (var i = 0; i < height1; i+=1) {
-		for (var j = 1; j < width1; j+= 1) {
-				if (document.elementFromPoint(280, 559).classList.contains('bomb')) {
-				return 1;
-				}
-			newleft++;
-		}
-		newtop++;
+	if (top1 - 10 < top2 + height2 && top1 + height1 > top2 - 1 && left1 < left2 + width2 && left1 + width1 - 10 > left2 - 1) {
+		return 1;
 	}
-	console.log('allo??')
+	console.log('allo??');
 	return 0;
 }
 
 // this function takes element and timer as arguments to move down.
-function dropBomb(element, timer) {
-	var top = parseInt(element.offsetTop);
-	if (top == window.innerHeight - 50) {
-		element.className = 'explosion';
-		// to make pseudo wait time :)
-		explosionTime = setTimeout(function (){
-			element.remove();
-		}, 1000);
-	}if (objectCollision(player) != 0) {
-		element.remove();
-		alert('gameover');
-		location.reload();
-		return;
-	}
-	console.log('are you here???')
-	element.style.top = top + 1 + 'px';
-	clearInterval(timer);
+function reset(bomb) {
+	var windowWidth = window.innerWidth;
+	var heightRandom = Math.random() * (1000 - 1) + 1;
+	bomb.style.top = -1 * heightRandom + 'px';
+	bomb.style.left = Math.floor(Math.random() * windowWidth) + 'px';
 }
 
-function generateBombs() {
-	var windowWidth = window.innerWidth;
-	var randomPosition = Math.floor(Math.random() * windowWidth);
+function createBombs() {
 	var element = document.createElement('div');
-	element.style.left = randomPosition + 'px';
-	element.style.border = 'solid black';
+	// element.style.border = 'solid black';
 	element.className = 'bomb';
 	document.body.appendChild(element);
-	var timer = setInterval(() => dropBomb(element, timer), 10);
+	reset(element);
+	bombs.push(element);
+}
+
+function dropBombs() {
+	if (gamePaused) {
+		return;
+	}
+	if (gameTicks > 1000 && speedMult < 4) {
+		for (var i = 0; i < 5; i++) {
+			createBombs();
+		}
+		speedMult += 0.1;
+		gameTicks = 0;
+	}
+	gameTicks++;
+	for (var i = 0; i < bombs.length; i++) {
+		var topOfBomb = bombs[i].offsetTop;
+		randomExplode = Math.floor(Math.random() * 100);
+		if (bombs[i].offsetTop == window.innerHeight - 100 - randomExplode) {
+			reset(bombs[i]);
+			score++;
+		} else {
+			if (objectCollision(player, bombs[i]) != 0) {
+				bombs[i].className = 'explosion';
+				bombs.splice(i, 1);
+				gamePaused = true;
+				player.className = 'character dead';
+				return;
+			}
+			else {
+			bombs[i].style.top = topOfBomb + 1 * speedMult + 'px';
+			}
+		}
+	}
+	
 }
 
 // prep for starting the game
 function startGame() {
+	requestAnimFrame(startGame);
 	start[0].style.display = 'none';
-	bombsTimer = setInterval(generateBombs, 2000);
+	// generateBombs();
+	move();
+	dropBombs();
 }
 
 function keyup(event) {
+	
 	var player = document.getElementById('player');
 	if (event.keyCode == 37) {
 		leftPressed = false;
@@ -95,12 +118,18 @@ function keyup(event) {
 
 
 function move() {
+	if (gamePaused) {
+		return;
+	}
 	var positionLeft = player.offsetLeft;
 	var positionTop = player.offsetTop;
 	
 	if (downPressed) {
-		var newTop = positionTop+1;
+		if (player.offsetTop < window.innerHeight - 30) {
+			var newTop = positionTop+2;
 			player.style.top = newTop + 'px';
+		}
+		
 
 		if (leftPressed == false) {
 			if (rightPressed == false) {
@@ -109,9 +138,10 @@ function move() {
 		}
 	}
 	if (upPressed) {
-		var newTop = positionTop-1;
+		var newTop = positionTop-2;
 
 		var element = document.elementFromPoint(0, newTop);
+		console.log(element);
 		var isittrue = element.classList.contains('sky');
 		console.log(isittrue);
 		if (element.classList.contains('sky') == false) {
@@ -125,7 +155,7 @@ function move() {
 		}
 	}
 	if (leftPressed) {
-		var newLeft = positionLeft-1;
+		var newLeft = positionLeft-2;
 
 		var element = document.elementFromPoint(newLeft, player.offsetTop);
 		if (element.classList.contains('sky') == false) {
@@ -136,7 +166,7 @@ function move() {
 		player.className = 'character walk left';
 	}
 	if (rightPressed) {
-		var newLeft = positionLeft+1;
+		var newLeft = positionLeft+2;
 		
 		var element = document.elementFromPoint(0, player.offsetTop);
 		if (element.classList.contains('sky') == false) {
@@ -168,12 +198,28 @@ function keydown(event) {
 function myLoadFunction() {
 	player = document.getElementById('player');
 	player.style.border = 'solid black'
-	timeout = setInterval(move, 10);
+	// timeout = setInterval(move, 10);
 	document.addEventListener('keydown', keydown);
 	document.addEventListener('keyup', keyup);
 	start = document.getElementsByClassName('start');
 	start[0].addEventListener('click', startGame);
+
+	for (var i = 0; i < 20; i++) {
+		createBombs();
+	}
+
+
 }
+// not mine : ) ref: codepen from panas cunt 
+window.requestAnimFrame = (function(){
+	return  window.requestAnimationFrame ||
+	window.webkitRequestAnimationFrame ||
+	window.mozRequestAnimationFrame    ||
+	window.oRequestAnimationFrame      ||
+	window.msRequestAnimationFrame     ||
+	function( callback ){
+		window.setTimeout(callback, 1000 / 60);
+	};})();
 
 
 document.addEventListener('DOMContentLoaded', myLoadFunction);
