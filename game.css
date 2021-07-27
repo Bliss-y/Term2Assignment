@@ -427,8 +427,8 @@ aside ul {list-style-type: none; margin-left: 0; padding-left: 0; margin-bottom:
 
 .arrow {
 	background-image: url(images/sprites.png);
-	width: 10px;
-	height: 32px;
+	width: 32px;
+	height: 10px;
 	position: absolute;
 	background-position: 0px -401px;
 }
@@ -440,7 +440,7 @@ aside ul {list-style-type: none; margin-left: 0; padding-left: 0; margin-bottom:
 	height: 10px;
 	position: absolute;
 	background-position: -96px -401px;
-	transform: rotate(90deg);
+	transform: rotate(90deg)
 }
 
 .start:before {
@@ -487,7 +487,7 @@ aside ul {list-style-type: none; margin-left: 0; padding-left: 0; margin-bottom:
 	margin-top: 0px;
 }
 
-.explosion:ombefore {
+.explosion:before {
 	z-index: 999;
 	width: 128px;
 	height: 32px;
